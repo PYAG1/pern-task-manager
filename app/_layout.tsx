@@ -6,6 +6,8 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { StatusBar } from 'react-native';
+import { uiColors } from '@/constants/Colors';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -26,11 +28,19 @@ export default function RootLayout() {
     return null;
   }
 
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+        <StatusBar barStyle="light-content" backgroundColor={uiColors.white} />
+
+      <Stack    screenOptions={{
+              headerShown: false,
+            }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
+        <Stack.Screen options={{presentation:"fullScreenModal",title:"Create"
+        }} name="create/index" />
+
       </Stack>
     </ThemeProvider>
   );
