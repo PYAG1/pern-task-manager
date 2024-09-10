@@ -38,6 +38,7 @@ export default function Index() {
     marginTop:sizes.marginSM,
         color: uiColors.white,
         fontSize: sizes.fontSize[4] * 2,
+           fontWeight:"400"
   }}>
     New Task 🎯
   </Text>

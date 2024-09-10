@@ -1,19 +1,25 @@
-import { Colors, uiColors } from "@/constants/Colors";
-import { sizes } from "@/constants/fonts&sizes";
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   Pressable,
+  Modal,
+  Button,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateTimePicker from "@react-native-community/datetimepicker"; // Import the DatePicker
+
+import { Colors, uiColors } from "@/constants/Colors";
+import { sizes } from "@/constants/fonts&sizes";
 
 export default function HomeScreen() {
   const [days, setDays] = useState([]);
   const [currentDay, setCurrentDay] = useState(new Date());
-  const [selectedDay, setSelectedDay] = useState(null); // Track the selected day
+  const [selectedDay, setSelectedDay] = useState<Date | null>(new Date()); // Track the selected day
+  const [showCalendar, setShowCalendar] = useState(false); // Modal visibility for calendar
+  const [showDatePicker, setShowDatePicker] = useState(false); // DatePicker state
 
   // Helper function to format the day as 'Day Date' (e.g., 'Mon 19')
   const formatDay = (date) => {
@@ -67,7 +73,15 @@ export default function HomeScreen() {
 
   // Function to handle when a date is clicked
   const handleDayPress = (day) => {
-    setSelectedDay(day.date); // Update the selected day
+    setSelectedDay(day.date); 
+  };
+
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setSelectedDay(selectedDate); 
+      generateWeekDays(selectedDate)
+    }
   };
 
   return (
@@ -77,39 +91,80 @@ export default function HomeScreen() {
         <Text style={styles.headerText}>your tasks ✏️</Text>
       </View>
 
-   <View>
-   <ScrollView
-        contentContainerStyle={styles.scrollViewContent}
-        horizontal
-      >
-        {days.map((item) => (
+      <View>
+      <Text
+  style={{
+    paddingHorizontal: sizes.marginSM,
+    paddingVertical: sizes.marginSM * 2,
+    color: uiColors.light_blue,
+    fontSize: sizes.fontSize[5] + 2,
+    fontWeight: "700",
+  }}
+>
+{
+    selectedDay?.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric"
+      })
+   }
+</Text>
+
+        <ScrollView
+          contentContainerStyle={styles.scrollViewContent}
+          horizontal
+        >
+          {days.map((item) => (
+            <Pressable
+              key={item.key} // Ensure a unique key is provided
+              style={[
+                styles.dayContainer,
+                item?.date.toDateString() === selectedDay?.toDateString()
+                  ? styles.selectedDay
+                  : null,
+              ]}
+              onPress={() => handleDayPress(item)}
+            >
+              <View style={styles.dateView}>
+                <Text style={styles.dayOfWeekText}>{item.dayOfWeek}</Text>
+                <Text
+                  style={[
+                    styles.dayOfMonthText,
+                    item?.date.toDateString() === selectedDay?.toDateString()
+                      ? styles.selectedDayText
+                      : null,
+                  ]}
+                >
+                  {item.dayOfMonth}
+                </Text>
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        {/* More Button */}
+        <View style={styles.moreButtonContainer}>
           <Pressable
-            key={item.key} // Ensure a unique key is provided
-            style={[
-              styles.dayContainer,
-              item?.date.toDateString() === selectedDay?.toDateString()
-                ? styles.selectedDay
-                : null,
-            ]}
-            onPress={() => handleDayPress(item)}
+            style={styles.moreButton}
+            onPress={() => setShowDatePicker(true)} // Show the DatePicker when More is pressed
           >
-            <View style={styles.dateView}>
-              <Text style={styles.dayOfWeekText}>{item.dayOfWeek}</Text>
-              <Text
-                style={[
-                  styles.dayOfMonthText,
-                  item?.date.toDateString() === selectedDay?.toDateString()
-                    ? styles.selectedDayText
-                    : null,
-                ]}
-              >
-                {item.dayOfMonth}
-              </Text>
-            </View>
+            <Text style={styles.moreButtonText}>More</Text>
           </Pressable>
-        ))}
-      </ScrollView>
-   </View>
+        </View>
+
+        {showDatePicker && (
+          <View style={styles.datePickerContainer}>
+            <DateTimePicker
+              testID="dateTimePicker"
+              value={selectedDay || new Date()} // Use selectedDay or default to current date
+              mode="date"
+              is24Hour={true}
+              display="calendar"
+              onChange={handleDateChange}
+             
+            />
+          </View>
+        )}
+      </View>
 
       {/* Display content for the selected day */}
       <View style={styles.contentContainer}>
@@ -136,7 +191,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: sizes.marginSM,
-    marginBottom: sizes.marginSM,
+ 
   },
   headerText: {
     color: uiColors.white,
@@ -148,19 +203,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     maxHeight: 90,
+    marginBottom:10,
     gap: 3,
-
   },
   dayContainer: {
     padding: 12,
     borderRadius: 10,
-    alignItems: "center", // Center the text vertically
+    alignItems: "center",
   },
   selectedDay: {
-    backgroundColor: uiColors.white, // Highlight selected day
+    backgroundColor: uiColors.white,
   },
   dateView: {
-    alignItems: "center", // Stack dayOfWeek and dayOfMonth vertically
+    alignItems: "center",
     gap: sizes.marginSM + 5,
     width: "100%",
     height: "100%",
@@ -181,15 +236,40 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   contentContainer: {
-    marginTop: 10, // Adjusted margin to reduce space
+    marginTop: 10,
     padding: 20,
     borderRadius: 10,
     backgroundColor: "#f9f9f9",
     width: "90%",
-    alignSelf: "center", // Center content container
+    alignSelf: "center",
   },
   contentText: {
     fontSize: 16,
     color: "#333",
+  },
+  moreButtonContainer: {
+    width: "100%",
+    flexDirection: "column",
+    justifyContent: "flex-end",
+    alignItems: "flex-end",
+    paddingHorizontal: sizes.marginSM,
+    position: "relative",
+  },
+  moreButton: {
+    padding: sizes.marginSM,
+  },
+  moreButtonText: {
+    color: uiColors.white,
+ 
+
+  },
+  datePickerContainer: {
+    right:15,
+
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    backgroundColor: uiColors.dark, // Optional: to match the screen background
+    paddingBottom: sizes.marginSM, // Optional: for padding below the DatePicker
   },
 });

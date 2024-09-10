@@ -101,9 +101,9 @@ export default function DatePickerComponent({
           }}
         >
           {Datemode === 'date' ? (
-            <Fontisto name='date' size={24} color={Colors.light.tint} />
+            <Fontisto name='date' size={24} color={uiColors.light_blue} />
           ) : (
-            <Ionicons name='time-outline' size={24} color={Colors.light.tint} />
+            <Ionicons name='time-outline' size={24} color={uiColors.light_blue} />
           )}
         </Pressable>
       </View>
