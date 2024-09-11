@@ -10,11 +10,60 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { StatusBar } from "react-native";
+import { StatusBar, View,Text } from "react-native";
 import { uiColors } from "@/constants/Colors";
+import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+const toastConfig = {
+  /*
+    Overwrite 'success' type,
+    by modifying the existing `BaseToast` component
+  */
+  success: (props) => (
+    <BaseToast
+      {...props}
+      style={{ borderLeftColor: 'green',backgroundColor:uiColors.dark_light }}
+      contentContainerStyle={{ paddingHorizontal: 15 }}
+      text1Style={{
+        fontSize: 15,
+        fontWeight: '400',
+        color:"white"
+      }}
+    />
+  ),
+  /*
+    Overwrite 'error' type,
+    by modifying the existing `ErrorToast` component
+  */
+  error: (props) => (
+    <ErrorToast
+    style={{backgroundColor:uiColors.dark_light,borderLeftColor:"red"}}
+      {...props}
+      text1Style={{
+        fontSize: 17,
+        color:"white"
+      }}
+      text2Style={{
+        fontSize: 15
+      }}
+    />
+  ),
+  /*
+    Or create a completely new type - `tomatoToast`,
+    building the layout from scratch.
+
+    I can consume any custom `props` I want.
+    They will be passed when calling the `show` method (see below)
+  */
+  tomatoToast: ({ text1, props }:{text1:string,props:any}) => (
+    <View style={{ height: 60, width: '100%', backgroundColor: 'tomato' }}>
+      <Text>{text1}</Text>
+      <Text>{props.uuid}</Text>
+    </View>
+  )
+};
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -37,7 +86,7 @@ export default function RootLayout() {
       <StatusBar barStyle="light-content" backgroundColor={uiColors.white} />
 
       <Stack
-        initialRouteName="onboarding/index"
+     initialRouteName="onboarding/index"
         screenOptions={{
           headerShown: false,
         }}
@@ -55,6 +104,16 @@ export default function RootLayout() {
           options={{ headerShown: false }}
         />
       </Stack>
+      <Toast config={toastConfig}/>
     </ThemeProvider>
   );
 }
+/*<View style={{
+  width: "100%", 
+  paddingHorizontal: sizes.marginSM, 
+  borderLeftWidth: 5, 
+  borderLeftColor: "red", 
+  alignItems: "center"
+}}>
+  <Text style={{color:"white"}}>{props?.text1}</Text>
+</View>*/

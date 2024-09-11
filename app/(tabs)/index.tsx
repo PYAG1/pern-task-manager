@@ -13,6 +13,7 @@ import DateTimePicker from "@react-native-community/datetimepicker"; // Import t
 
 import { Colors, uiColors } from "@/constants/Colors";
 import { sizes } from "@/constants/fonts&sizes";
+import { router } from "expo-router";
 
 export default function HomeScreen() {
   const [days, setDays] = useState([]);
@@ -180,6 +181,11 @@ export default function HomeScreen() {
           <Text style={styles.contentText}>Select a day to see content</Text>
         )}
       </View>
+      <Pressable onPress={()=>{
+router.navigate("/onboarding")
+      }}>
+        <Text>Go to onboardin</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }

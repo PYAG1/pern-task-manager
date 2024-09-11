@@ -32,7 +32,7 @@ export default function TextInputComponent({
   return (
     <View style={{ flexDirection: "column", gap: 12, width: "100%", position: "relative" }}>
       {label && (
-        <Text style={{ fontSize: sizes.fontSize[3], color: Colors.light.text }}>
+        <Text style={{ fontSize: sizes.fontSize[3], color:uiColors.white}}>
           {label}
         </Text>
       )}
@@ -71,9 +71,9 @@ export default function TextInputComponent({
           {type == "password" && (
             <>
               {show && type == "password" ? (
-                <Eye size={24} color={Colors.light.tint}/>
+                <Eye size={24} color={uiColors.dark_tint}/>
               ) : (
-                <EyeSlash size={24} color={Colors.light.tint}/>
+                <EyeSlash size={24} color={uiColors.dark_tint}/>
               )}
             </>
           )}
