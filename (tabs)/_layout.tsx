@@ -4,8 +4,9 @@ import React from "react";
 import { Colors, uiColors } from "@/constants/Colors";
 import { sizes } from "@/constants/fonts&sizes";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Add, Folder, Home2, Notification, User } from "iconsax-react-native";
-import { View } from "react-native";
+import { Add, Folder, Home2, User, Notification } from "iconsax-react-native";
+import { Pressable, View, Text } from "react-native";
+import CustomTabBar from "@/components/navigation/customTabBar";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();

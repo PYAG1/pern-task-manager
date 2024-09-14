@@ -2,6 +2,8 @@ import { userData } from "@/@types";
 import TextInputComponent from "@/components/core-ui/textinput";
 import { uiColors } from "@/constants/Colors";
 import { sizes } from "@/constants/fonts&sizes";
+import { useUserContext } from "@/context/context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { router } from "expo-router";
 import { Formik } from "formik";
@@ -11,17 +13,17 @@ import {
   Text,
   Image,
   Pressable,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function Index() {
   const [loading, setLoading] = useState(false);
-
+  const { setUserData, userData } = useUserContext();
   const signIn = async (username: string, password: string) => {
     setLoading(true);
 
@@ -36,7 +38,11 @@ export default function Index() {
           type: "success",
           text1: `${res?.data?.message}`,
         });
+        setUserData(res?.data?.data);
+        const jsonValue = JSON.stringify(res?.data?.data);
+        await AsyncStorage.setItem("userData", jsonValue);
       }
+      router.navigate("/(tabs)/");
     } catch (error: any) {
       const errorMessage =
         error?.response?.data?.message ||
@@ -46,7 +52,6 @@ export default function Index() {
         type: "error",
         text1: errorMessage,
       });
-      console.log(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -135,6 +140,8 @@ export default function Index() {
               errors,
               values,
               touched,
+              isValid,
+              dirty,
             }) => (
               <View
                 style={{
@@ -182,28 +189,27 @@ export default function Index() {
 
                 <Pressable
                   onPress={handleSubmit as any}
-                  disabled={loading} // Disable the button when loading
+                  disabled={loading || !(isValid && dirty)}
                   style={{
                     width: "100%",
-                    backgroundColor: loading
-                      ? uiColors.dark_tint
-                      : uiColors.light_blue, // Show a different color if loading
+                    backgroundColor:
+                      loading || !(isValid && dirty)
+                        ? uiColors.dark_tint
+                        : uiColors.light_blue,
                     padding: sizes.marginSM * 1.2,
                     borderRadius: 200,
                     position: "relative",
                   }}
                 >
                   {loading ? (
-                    <ActivityIndicator
-                      size="small"
-                      color={uiColors.dark_tint}
-                    />
+                    <ActivityIndicator animating={true} color={"white"} />
                   ) : (
                     <Text
                       style={{
                         textAlign: "center",
                         fontWeight: "500",
                         fontSize: sizes.fontSize[3],
+                        color:uiColors.dark_light
                       }}
                     >
                       Continue

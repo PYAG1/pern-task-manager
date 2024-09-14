@@ -9,10 +9,11 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/hooks/useColorScheme";
-import { StatusBar, View,Text } from "react-native";
 import { uiColors } from "@/constants/Colors";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { StatusBar, Text, View } from "react-native";
 import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
+import { UserContextProvider } from "@/context/context";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -24,12 +25,12 @@ const toastConfig = {
   success: (props) => (
     <BaseToast
       {...props}
-      style={{ borderLeftColor: 'green',backgroundColor:uiColors.dark_light }}
+      style={{ borderLeftColor: "green", backgroundColor: uiColors.dark_light }}
       contentContainerStyle={{ paddingHorizontal: 15 }}
       text1Style={{
         fontSize: 15,
-        fontWeight: '400',
-        color:"white"
+        fontWeight: "400",
+        color: "white",
       }}
     />
   ),
@@ -39,14 +40,14 @@ const toastConfig = {
   */
   error: (props) => (
     <ErrorToast
-    style={{backgroundColor:uiColors.dark_light,borderLeftColor:"red"}}
+      style={{ backgroundColor: uiColors.dark_light, borderLeftColor: "red" }}
       {...props}
       text1Style={{
         fontSize: 17,
-        color:"white"
+        color: "white",
       }}
       text2Style={{
-        fontSize: 15
+        fontSize: 15,
       }}
     />
   ),
@@ -57,12 +58,12 @@ const toastConfig = {
     I can consume any custom `props` I want.
     They will be passed when calling the `show` method (see below)
   */
-  tomatoToast: ({ text1, props }:{text1:string,props:any}) => (
-    <View style={{ height: 60, width: '100%', backgroundColor: 'tomato' }}>
+  tomatoToast: ({ text1, props }: { text1: string; props: any }) => (
+    <View style={{ height: 60, width: "100%", backgroundColor: "tomato" }}>
       <Text>{text1}</Text>
       <Text>{props.uuid}</Text>
     </View>
-  )
+  ),
 };
 
 export default function RootLayout() {
@@ -84,13 +85,14 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <StatusBar barStyle="light-content" backgroundColor={uiColors.white} />
-
+<UserContextProvider>
       <Stack
-     initialRouteName="onboarding/index"
+        initialRouteName="/(tabs)"
         screenOptions={{
           headerShown: false,
         }}
       >
+  
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
         <Stack.Screen
@@ -99,21 +101,9 @@ export default function RootLayout() {
         />
         <Stack.Screen name="auth/signIn" options={{ headerShown: false }} />
         <Stack.Screen name="auth/signUp" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="onboarding/index"
-          options={{ headerShown: false }}
-        />
       </Stack>
-      <Toast config={toastConfig}/>
+      </UserContextProvider>
+      <Toast config={toastConfig} />
     </ThemeProvider>
   );
 }
-/*<View style={{
-  width: "100%", 
-  paddingHorizontal: sizes.marginSM, 
-  borderLeftWidth: 5, 
-  borderLeftColor: "red", 
-  alignItems: "center"
-}}>
-  <Text style={{color:"white"}}>{props?.text1}</Text>
-</View>*/

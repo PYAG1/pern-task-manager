@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from "react";
+import DateTimePicker from "@react-native-community/datetimepicker"; // Import the DatePicker
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
   Pressable,
-  Modal,
-  Button,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import DateTimePicker from "@react-native-community/datetimepicker"; // Import the DatePicker
 
-import { Colors, uiColors } from "@/constants/Colors";
+import { uiColors } from "@/constants/Colors";
 import { sizes } from "@/constants/fonts&sizes";
+import { useUserContext } from "@/context/context";
 import { router } from "expo-router";
 
 export default function HomeScreen() {
@@ -21,7 +20,7 @@ export default function HomeScreen() {
   const [selectedDay, setSelectedDay] = useState<Date | null>(new Date()); // Track the selected day
   const [showCalendar, setShowCalendar] = useState(false); // Modal visibility for calendar
   const [showDatePicker, setShowDatePicker] = useState(false); // DatePicker state
-
+const {getData}=useUserContext()
   // Helper function to format the day as 'Day Date' (e.g., 'Mon 19')
   const formatDay = (date) => {
     return {
@@ -84,7 +83,10 @@ export default function HomeScreen() {
       generateWeekDays(selectedDate)
     }
   };
+useEffect(()=>{
 
+  getData()
+},[])
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>

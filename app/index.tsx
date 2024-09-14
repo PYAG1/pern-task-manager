@@ -1,37 +1,37 @@
-import { useCallback, useRef } from 'react';
+import Button from '@/components/onboarding/button';
+import ListItem from '@/components/onboarding/listItem';
+import PaginationElement from '@/components/onboarding/pagination';
+import { uiColors } from '@/constants/Colors';
+import { useCallback } from 'react';
 import {
+
   ImageURISource,
-  Pressable,
   SafeAreaView,
   StyleSheet,
   View,
-  ViewToken,
+  ViewToken
 } from 'react-native';
 import Animated, {
   useAnimatedRef,
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
-import ListItem from '../../components/onboarding/listItem';
-import PaginationElement from "../../components/onboarding/pagination"
-import Button from "../../components/onboarding/button";
-import { uiColors } from '@/constants/Colors';
 
 const pages = [
     {
       text: 'Organize Your Daily Tasks',
       description: 'Effortlessly manage and prioritize your daily to-dos to stay on top of your work.',
-      image: require('../../assets/images/daily-tasks.png'),
+      image: require('../assets/images/daily-tasks.png'),
     },
     {
       text: 'Track Your Project Progress',
       description: 'Monitor tasks, deadlines, and milestones to ensure you’re on the right track.',
-      image: require('../../assets/images/task.png'),
+      image: require('../assets/images/task.png'),
     },
     {
       text: 'Collaborate with Your Team',
       description: 'Assign tasks, share updates, and work together seamlessly on team projects.',
-      image: require('../../assets/images/team-work.png'),
+      image: require('../assets/images/team-work.png'),
     },
   ];
   

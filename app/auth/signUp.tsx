@@ -204,6 +204,7 @@ export default function Index() {
                         textAlign: "center",
                         fontWeight: "500",
                         fontSize: sizes.fontSize[3],
+                        color:uiColors.dark_light
                       }}
                     >
                       Continue

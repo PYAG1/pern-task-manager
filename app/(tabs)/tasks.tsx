@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, Text, View, StyleSheet, Pressable } from 'react-native';
 import { uiColors } from '@/constants/Colors';
 import { sizes } from '@/constants/fonts&sizes';
 import { TaskSquare } from 'iconsax-react-native';
+import { useUserContext } from '@/context/context';
 
 export default function Tasks() {
   const [activeFilter, setActiveFilter] = useState('completed'); // Default active filter
-
+const {getAllTasks,tasks}=useUserContext()
   const filters = [
     { label: 'Completed', value: 'completed', count: 5 },
     { label: 'Pending', value: 'pending', count: 8 },
@@ -14,7 +15,10 @@ export default function Tasks() {
     { label: 'Low', value: 'low', count: 7 },
     { label: 'Medium', value: 'medium', count: 2 },
   ];
-
+useEffect(()=>{
+  getAllTasks()
+},[])
+  console.log(tasks)
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>

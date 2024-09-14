@@ -8,6 +8,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ArrowRight } from "iconsax-react-native";
 import { router } from "expo-router";
+import { useUserContext } from "@/context/context";
 
 export default function Profile() {
   const stats = [
@@ -15,7 +16,7 @@ export default function Profile() {
     { title: "Completed", stat: 15 },
     { title: "Pending", stat: 5 },
   ];
-
+const {userData}=useUserContext()
   const navigationOptions = [
     {
       title: "Details",
@@ -98,7 +99,7 @@ export default function Profile() {
               marginBottom: 10,
             }}
           >
-            PYAH1
+         {userData?.user.username}
           </Text>
           <Text
             style={{
@@ -107,7 +108,7 @@ export default function Profile() {
               textAlign: "center",
             }}
           >
-            gyekyeyaw3@gmail.com
+          {userData?.user.email}
           </Text>
         </View>
       </View>
