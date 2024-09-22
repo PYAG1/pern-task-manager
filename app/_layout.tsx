@@ -25,7 +25,7 @@ const toastConfig = {
   success: (props) => (
     <BaseToast
       {...props}
-      style={{ borderLeftColor: "green", backgroundColor: uiColors.dark_light }}
+      style={{ borderLeftColor: "green", backgroundColor: uiColors.dark_light ,zIndex:9999}}
       contentContainerStyle={{ paddingHorizontal: 15 }}
       text1Style={{
         fontSize: 15,
@@ -40,7 +40,7 @@ const toastConfig = {
   */
   error: (props) => (
     <ErrorToast
-      style={{ backgroundColor: uiColors.dark_light, borderLeftColor: "red" }}
+      style={{ backgroundColor: uiColors.dark_light, borderLeftColor: "red",zIndex:9999 }}
       {...props}
       text1Style={{
         fontSize: 17,
@@ -96,9 +96,10 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
         <Stack.Screen
-          options={{ presentation: "fullScreenModal", title: "Create" }}
+          options={{ presentation:"containedTransparentModal", title: "Create" }}
           name="create/index"
         />
+        <Stack.Screen name="tasksdetails/index" options={{ headerShown: false }} />
         <Stack.Screen name="auth/signIn" options={{ headerShown: false }} />
         <Stack.Screen name="auth/signUp" options={{ headerShown: false }} />
       </Stack>

@@ -45,10 +45,10 @@ export const UserContextProvider = ({ children }: UserContextProviderProps) => {
       const jsonValue = await AsyncStorage.getItem('userData');
   jsonValue != null ? setUserData(JSON.parse(jsonValue)) : null;
       if(null){
-        router.navigate("/auth/signin")      
+        router.navigate("/auth/signIn")      
       }
     } catch (e) {
-  router.navigate("/auth/signin")
+  router.navigate("/auth/signIn")
     }
   };
 const getAllTasks=async ()=>{

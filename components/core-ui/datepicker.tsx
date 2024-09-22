@@ -16,8 +16,8 @@ export default function DatePickerComponent({
   errors,
   touched,
   placeholder,
-  Datemode
-}:{
+  Datemode,
+}: {
   placeholder?: string;
   label?: any;
   values: any;
@@ -31,12 +31,15 @@ export default function DatePickerComponent({
   const [date, setDate] = useState<Date | null>(null);
   const [show, setShow] = useState(false);
 
-  // Set the date from Formik values on component mount and when values change
+
   useEffect(() => {
     if (values[id]) {
       setDate(new Date(values[id]));
+    } else {
+      setDate(null); 
     }
   }, [values[id]]);
+  
 
   const onChange = (event: any, selectedDate: Date | undefined) => {
     setShow(false);
@@ -64,7 +67,7 @@ export default function DatePickerComponent({
         <Text
           style={{
             fontSize: sizes.fontSize[3],
-            color: Colors.light.text
+            color: Colors.light.text,
           }}
         >
           {label}
@@ -101,21 +104,22 @@ export default function DatePickerComponent({
           }}
         >
           {Datemode === 'date' ? (
-            <Fontisto name='date' size={24} color={uiColors.light_blue} />
+            <Fontisto name="date" size={24} color={uiColors.light_blue} />
           ) : (
-            <Ionicons name='time-outline' size={24} color={uiColors.light_blue} />
+            <Ionicons name="time-outline" size={24} color={uiColors.light_blue} />
           )}
         </Pressable>
       </View>
       {show && (
         <DateTimePicker
-          testID='dateTimePicker'
+          testID="dateTimePicker"
           value={date || new Date()}
           mode={Datemode}
           is24Hour={true}
-          display='default'
+          display="default"
           onChange={onChange}
-          minimumDate={new Date()}
+          // Conditionally apply minimumDate only for date mode
+          minimumDate={Datemode === 'date' ? new Date() : undefined}
         />
       )}
       {errors && touched && touched[id] && errors[id] ? (

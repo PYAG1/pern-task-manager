@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, Text, View, StyleSheet, Pressable } from 'react-native';
+import { SafeAreaView, ScrollView, Text, View, StyleSheet, Pressable, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { uiColors } from '@/constants/Colors';
 import { sizes } from '@/constants/fonts&sizes';
 import { TaskSquare } from 'iconsax-react-native';
 import { useUserContext } from '@/context/context';
+import TaskItem from "@/components/core-ui/taskItem"
 
 export default function Tasks() {
-  const [activeFilter, setActiveFilter] = useState('completed'); // Default active filter
-const {getAllTasks,tasks}=useUserContext()
+  const [activeFilter, setActiveFilter] = useState('completed');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const { getAllTasks, tasks } = useUserContext();
+
   const filters = [
     { label: 'Completed', value: 'completed', count: 5 },
     { label: 'Pending', value: 'pending', count: 8 },
@@ -15,10 +19,23 @@ const {getAllTasks,tasks}=useUserContext()
     { label: 'Low', value: 'low', count: 7 },
     { label: 'Medium', value: 'medium', count: 2 },
   ];
-useEffect(()=>{
-  getAllTasks()
-},[])
-  console.log(tasks)
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    setLoading(true);
+    await getAllTasks();
+    setLoading(false);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await getAllTasks();
+    setRefreshing(false);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -32,6 +49,7 @@ useEffect(()=>{
         horizontal
         contentContainerStyle={styles.filterScrollView}
         showsHorizontalScrollIndicator={false}
+        style={styles.scrollView}
       >
         {filters.map((filter) => (
           <Pressable
@@ -58,6 +76,23 @@ useEffect(()=>{
           </Pressable>
         ))}
       </ScrollView>
+
+      {loading ? (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color={uiColors.white} />
+        </View>
+      ) : (
+        <FlatList
+          data={tasks}
+          renderItem={({ item, index }) => <TaskItem item={item} index={index} />}
+          keyExtractor={(item) => item?.task_id.toString()}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -71,7 +106,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     gap: 10,
-    padding:sizes.marginSM,
+    padding: sizes.marginSM,
     alignItems: 'center',
   },
   iconContainer: {
@@ -88,17 +123,20 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   filterScrollView: {
-    marginVertical: sizes.marginSM,
+    flexDirection: 'row',
+  },
+  scrollView: {
+    maxHeight: 50,
   },
   filterItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: sizes.marginSM,
     paddingHorizontal: sizes.marginSM,
-    borderRadius: 20, 
-    height: 40, 
+    borderRadius: 20,
+    height: 40,
     backgroundColor: uiColors.dark_light,
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
   },
   activeFilter: {
     backgroundColor: uiColors.white,
@@ -108,18 +146,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   circle: {
-    width: 28, // Circle size
-    height: 28, // Circle size
-    borderRadius: 14, // Circle shape
-    backgroundColor: uiColors.dark_tint, // Change this color as needed
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: uiColors.dark_tint,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: sizes.marginSM, // Space between text and circle
+    marginLeft: sizes.marginSM,
   },
   circleText: {
     color: uiColors.white,
     fontWeight: 'bold',
-    fontSize: sizes.fontSize[3], // Adjust font size if needed
+    fontSize: sizes.fontSize[3],
   },
   filterText: {
     color: uiColors.white,
@@ -127,5 +165,10 @@ const styles = StyleSheet.create({
   },
   activeFilterText: {
     color: uiColors.dark,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

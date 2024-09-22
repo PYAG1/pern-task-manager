@@ -114,7 +114,8 @@ export default function Index() {
               marginTop: sizes.marginSM,
             }}
           >
-            <Text
+        <Pressable onPress={()=> router.navigate("/(tabs)/")}>
+        <Text
               style={{
                 fontSize: sizes.fontSize[5],
                 color: uiColors.light_blue,
@@ -122,6 +123,7 @@ export default function Index() {
             >
               Sign In to get started!
             </Text>
+        </Pressable>
           </View>
 
           <Formik

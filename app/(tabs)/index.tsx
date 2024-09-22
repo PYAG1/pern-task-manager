@@ -1,50 +1,78 @@
-import DateTimePicker from "@react-native-community/datetimepicker"; // Import the DatePicker
+import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useEffect, useState } from "react";
 import {
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { uiColors } from "@/constants/Colors";
 import { sizes } from "@/constants/fonts&sizes";
 import { useUserContext } from "@/context/context";
-import { router } from "expo-router";
+import axios from "axios";
+import { formatDateAndTime } from "@/utils";
+import TaskItem from "@/components/core-ui/taskItem";
+import { RefreshControl } from 'react-native';
+import { ActivityIndicator } from "react-native-paper";
 
 export default function HomeScreen() {
   const [days, setDays] = useState([]);
   const [currentDay, setCurrentDay] = useState(new Date());
-  const [selectedDay, setSelectedDay] = useState<Date | null>(new Date()); // Track the selected day
-  const [showCalendar, setShowCalendar] = useState(false); // Modal visibility for calendar
-  const [showDatePicker, setShowDatePicker] = useState(false); // DatePicker state
-const {getData}=useUserContext()
-  // Helper function to format the day as 'Day Date' (e.g., 'Mon 19')
+  const [selectedDay, setSelectedDay] = useState<Date | null>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const { userData } = useUserContext();
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const filterTasksByDate = async () => {
+    setLoading(true);
+    const formattedDate = formatDateAndTime(`${selectedDay}`, "date");
+    console.log(formattedDate);
+    try {
+      const res = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/taskbyDate`, {
+        params: { created_at: formattedDate },
+        headers: {
+          Authorization: `Bearer ${userData?.token}`,
+        },
+      });
+      if (res.data?.status) {
+        setTasks(res.data?.data);
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error.message ||
+        "An unexpected error occurred.";
+      console.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const { getData } = useUserContext();
+
   const formatDay = (date) => {
     return {
-      dayOfWeek: date.toLocaleDateString("en-US", { weekday: "short" }), // Format day (e.g., 'Mon')
-      dayOfMonth: date.toLocaleDateString("en-US", { day: "numeric" }), // Format date (e.g., '19')
+      dayOfWeek: date.toLocaleDateString("en-US", { weekday: "short" }),
+      dayOfMonth: date.toLocaleDateString("en-US", { day: "numeric" }),
     };
   };
 
-  // Function to generate the week (Sunday to Saturday) containing the current day
   const generateWeekDays = (currentDate) => {
     const dayList = [];
-    const dayOfWeek = currentDate.getDay(); // Get the current day of the week (0 for Sunday, 6 for Saturday)
-
-    // Get the Sunday of the current week
+    const dayOfWeek = currentDate.getDay();
     const sunday = new Date(currentDate);
     sunday.setDate(currentDate.getDate() - dayOfWeek);
 
-    // Generate the days from Sunday to Saturday
     for (let i = 0; i < 7; i++) {
       const newDate = new Date(sunday);
-      newDate.setDate(sunday.getDate() + i); // Add i days to Sunday
+      newDate.setDate(sunday.getDate() + i);
       const formattedDate = formatDay(newDate);
       dayList.push({
-        key: i.toString(), // Unique key
+        key: i.toString(),
         date: newDate,
         dayOfWeek: formattedDate.dayOfWeek,
         dayOfMonth: formattedDate.dayOfMonth,
@@ -52,41 +80,56 @@ const {getData}=useUserContext()
     }
 
     setDays(dayList);
-    setSelectedDay(dayList[0].date); // Set the first day (Sunday) as default
+    setSelectedDay(dayList[0].date);
   };
 
   useEffect(() => {
-    // Generate the initial week
     generateWeekDays(new Date());
-
-    // Set an interval to check every 60 seconds (60000 ms) if the day has changed
     const intervalId = setInterval(() => {
       const now = new Date();
       if (now.getDate() !== currentDay.getDate()) {
-        setCurrentDay(now); // Update the current day
-        generateWeekDays(now); // Regenerate the list of days for the new week
+        setCurrentDay(now);
+        generateWeekDays(now);
       }
-    }, 60000); // Check every minute
+    }, 60000);
 
-    return () => clearInterval(intervalId); // Cleanup the interval on unmount
+    return () => clearInterval(intervalId);
   }, [currentDay]);
 
-  // Function to handle when a date is clicked
-  const handleDayPress = (day) => {
-    setSelectedDay(day.date); 
-  };
-
-  const handleDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setSelectedDay(selectedDate); 
-      generateWeekDays(selectedDate)
+  const handleDayPress = async (day) => {
+    if (selectedDay?.toDateString() !== day.date.toDateString()) {
+      setSelectedDay(day.date);
+      console.log("Selected day:", day.date); // Debugging log
+      await filterTasksByDate();
     }
   };
-useEffect(()=>{
 
-  getData()
-},[])
+  const handleDateChange = async (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setSelectedDay(selectedDate);
+      generateWeekDays(selectedDate);
+      await filterTasksByDate();
+    }
+  };
+
+  useEffect(() => {
+    getData();
+    filterTasksByDate();
+  }, []);
+
+  useEffect(() => {
+    if (selectedDay) {
+      filterTasksByDate();
+    }
+  }, [selectedDay]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await filterTasksByDate();
+    setRefreshing(false);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -95,60 +138,47 @@ useEffect(()=>{
       </View>
 
       <View>
-      <Text
-  style={{
-    paddingHorizontal: sizes.marginSM,
-    paddingVertical: sizes.marginSM * 2,
-    color: uiColors.light_blue,
-    fontSize: sizes.fontSize[5] + 2,
-    fontWeight: "700",
-  }}
->
-{
-    selectedDay?.toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric"
-      })
-   }
-</Text>
+        <Text
+          style={{
+            paddingHorizontal: sizes.marginSM,
+            paddingVertical: sizes.marginSM * 2,
+            color: uiColors.light_blue,
+            fontSize: sizes.fontSize[5] + 2,
+            fontWeight: "700",
+          }}
+        >
+          {selectedDay?.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+          })}
+        </Text>
 
         <ScrollView
           contentContainerStyle={styles.scrollViewContent}
           horizontal
         >
-          {days.map((item) => (
+          {days.map((item, index) => (
             <Pressable
-              key={item.key} // Ensure a unique key is provided
-              style={[
-                styles.dayContainer,
-                item?.date.toDateString() === selectedDay?.toDateString()
-                  ? styles.selectedDay
-                  : null,
-              ]}
+              key={index}
+              style={[styles.dayContainer, item?.date.toDateString() === selectedDay?.toDateString() ? styles.selectedDay : null]}
               onPress={() => handleDayPress(item)}
             >
               <View style={styles.dateView}>
                 <Text style={styles.dayOfWeekText}>{item.dayOfWeek}</Text>
                 <Text
-                  style={[
-                    styles.dayOfMonthText,
-                    item?.date.toDateString() === selectedDay?.toDateString()
-                      ? styles.selectedDayText
-                      : null,
-                  ]}
+                  style={[styles.dayOfMonthText, item?.date.toDateString() === selectedDay?.toDateString() ? styles.selectedDayText : null]}
                 >
-                  {item.dayOfMonth}
+                  {item?.dayOfMonth}
                 </Text>
               </View>
             </Pressable>
           ))}
         </ScrollView>
 
-        {/* More Button */}
         <View style={styles.moreButtonContainer}>
           <Pressable
             style={styles.moreButton}
-            onPress={() => setShowDatePicker(true)} // Show the DatePicker when More is pressed
+            onPress={() => setShowDatePicker(true)}
           >
             <Text style={styles.moreButtonText}>More</Text>
           </Pressable>
@@ -158,36 +188,29 @@ useEffect(()=>{
           <View style={styles.datePickerContainer}>
             <DateTimePicker
               testID="dateTimePicker"
-              value={selectedDay || new Date()} // Use selectedDay or default to current date
+              value={selectedDay || new Date()}
               mode="date"
               is24Hour={true}
               display="calendar"
               onChange={handleDateChange}
-             
             />
           </View>
         )}
       </View>
 
-      {/* Display content for the selected day */}
-      <View style={styles.contentContainer}>
-        {selectedDay ? (
-          <Text style={styles.contentText}>
-            Content for{" "}
-            {selectedDay.toLocaleDateString("en-US", {
-              weekday: "long",
-              day: "numeric",
-            })}
-          </Text>
+      <ScrollView
+        style={styles.taskListContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color={uiColors.white} />
+        ) : tasks.length > 0 ? (
+          tasks.map((item, index) => <TaskItem key={index} item={item} index={index} />)
         ) : (
-          <Text style={styles.contentText}>Select a day to see content</Text>
+          <Text style={styles.noTasksText}>No events found</Text>
         )}
-      </View>
-      <Pressable onPress={()=>{
-router.navigate("/onboarding")
-      }}>
-        <Text>Go to onboardin</Text>
-      </Pressable>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -199,7 +222,6 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: sizes.marginSM,
- 
   },
   headerText: {
     color: uiColors.white,
@@ -211,7 +233,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     maxHeight: 90,
-    marginBottom:10,
+    marginBottom: 10,
     gap: 3,
   },
   dayContainer: {
@@ -243,17 +265,14 @@ const styles = StyleSheet.create({
     fontSize: sizes.fontSize[5] + 1,
     fontWeight: "500",
   },
-  contentContainer: {
-    marginTop: 10,
-    padding: 20,
-    borderRadius: 10,
-    backgroundColor: "#f9f9f9",
-    width: "90%",
-    alignSelf: "center",
+  taskListContainer: {
+    flex: 1,
   },
-  contentText: {
+  noTasksText: {
+    textAlign: "center",
+    color: "#aaa",
     fontSize: 16,
-    color: "#333",
+    marginTop: 20,
   },
   moreButtonContainer: {
     width: "100%",
@@ -268,16 +287,13 @@ const styles = StyleSheet.create({
   },
   moreButtonText: {
     color: uiColors.white,
- 
-
   },
   datePickerContainer: {
-    right:15,
-
+    right: 15,
     position: "absolute",
     bottom: 0,
     width: "100%",
-    backgroundColor: uiColors.dark, // Optional: to match the screen background
-    paddingBottom: sizes.marginSM, // Optional: for padding below the DatePicker
+    backgroundColor: uiColors.dark,
+    paddingBottom: sizes.marginSM,
   },
 });

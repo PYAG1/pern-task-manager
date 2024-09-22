@@ -1,4 +1,5 @@
-export function formatDateAndTime(dateString: string, mode: 'date' | 'time') {
+export function formatDateAndTime(dateString: any, mode: 'date' | 'time') {
+ 
     const date = new Date(dateString);
     
     if (mode === 'date') {
