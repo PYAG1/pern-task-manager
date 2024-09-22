@@ -8,6 +8,7 @@ import {
   ScrollView,
   RefreshControl,
   TextInput,
+  Alert,
 } from "react-native";
 import { uiColors } from "@/constants/Colors";
 import { sizes } from "@/constants/fonts&sizes";
@@ -27,7 +28,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [task, setTask] = useState<any>();
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const { userData, loading, setLoading } = useUserContext();
+  const { userData, loading, setLoading,getAllTasks } = useUserContext();
   const { task_id, title } = useLocalSearchParams();
   const [refreshing, setRefreshing] = useState(false);
   const [subtasks, setSubtasks] = useState<subtask[]>([]);
@@ -130,6 +131,57 @@ const Index = () => {
     });
   };
 
+const deleteTask = async () => {
+try {
+  const res = await axios.delete(
+    `${process.env.EXPO_PUBLIC_API_URL}/tasks/${task_id}`,
+    {
+      headers: {
+        Authorization: `Bearer ${userData?.token}`,
+      },
+    }
+  )
+  if(res?.data?.status){
+    Toast.show({
+      type: "success",
+      text1: "Task deleted successfully",
+    });
+ router.back();
+  }
+} catch (error:any) {
+  const errorMessage =
+  error?.response?.data?.message ||
+  error.message ||
+  "An unexpected error occurred.";
+Toast.show({
+  type: "error",
+  text1: errorMessage,
+});
+}
+finally{
+  setLoading(false);
+}
+
+}
+  const DeleleButtonAlert =  async () =>
+    Alert.alert("Delete Task", "Are you sure you want to delete this task?", [
+      {
+        text: "Cancel",
+        onPress: () => console.log(""),
+        style: "cancel",
+      },
+      {
+        text: "OK",
+        onPress: () => {
+     deleteTask();
+     
+        },
+      },
+    ]);
+
+    useEffect(()=>{
+getAllTasks();
+    },[deleteTask])
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -155,7 +207,7 @@ const Index = () => {
             <Pressable>
               <Edit2 size="24" color={uiColors.dark} />
             </Pressable>
-            <Pressable>
+            <Pressable onPress={DeleleButtonAlert}>
               <Trash size="24" color={uiColors.dark} />
             </Pressable>
           </View>
