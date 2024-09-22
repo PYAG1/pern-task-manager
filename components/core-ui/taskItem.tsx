@@ -8,10 +8,10 @@ import { formatDateAndTime } from '@/utils';
 import { router } from 'expo-router';
 
 // Reusable TaskItem Component
-const TaskItem = ({ item, index }) => {
+const TaskItem = ({ item, index }:{item:any,index:number}) => {
   return (
     <Pressable
-      onPress={() => router.push({ pathname: "/tasksdetails", params: { task_id: item.task_id } })}
+      onPress={() => router.push({ pathname: "/tasksdetails", params: { task_id: item.task_id,title:item.title,due_date:item.due_date } })}
       style={{ width: '100%', flexDirection: 'column', padding: sizes.marginSM + 5 }}
     >
       <View style={[styles.taskCard, index === 0 ? styles.firstTaskCard : styles.otherTaskCard]}>
