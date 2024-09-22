@@ -18,7 +18,7 @@ Status: Not Complete
 - Filter tasks by date created
 - View task details and subtasks.
 
-### Tech Stack
+## Tech Stack
 - React Native
 - Postgresql
 - Typescript
