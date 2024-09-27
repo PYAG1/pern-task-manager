@@ -14,6 +14,10 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { StatusBar, Text, View } from "react-native";
 import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import { UserContextProvider } from "@/context/context";
+import { TamaguiProvider } from "@tamagui/core";
+import tamaguiConfig from "@/tamagui.config";
+
+
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -85,6 +89,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <StatusBar barStyle="light-content" backgroundColor={uiColors.white} />
+      <TamaguiProvider config={tamaguiConfig} >
 <UserContextProvider>
       <Stack
         initialRouteName="/(tabs)"
@@ -92,7 +97,7 @@ export default function RootLayout() {
           headerShown: false,
         }}
       >
-  
+        <Stack.Screen name="editTasks/index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
         <Stack.Screen
@@ -104,6 +109,7 @@ export default function RootLayout() {
         <Stack.Screen name="auth/signUp" options={{ headerShown: false }} />
       </Stack>
       </UserContextProvider>
+      </TamaguiProvider>
       <Toast config={toastConfig} />
     </ThemeProvider>
   );

@@ -14,3 +14,17 @@ export interface subtask{
     title: string;
     is_completed: boolean;
 }
+
+
+
+export interface TaskData {
+    task_id?: string;
+    title: string;
+    due_date: string;
+    description: string;
+    time: string;
+    priority: string;
+    status?: string;
+    subtasks?: subtask[];
+    created_at?:any
+  }

@@ -6,9 +6,10 @@ import { uiColors } from '@/constants/Colors';
 import { sizes } from '@/constants/fonts&sizes';
 import { formatDateAndTime } from '@/utils';
 import { router } from 'expo-router';
+import { subtask, TaskData } from '@/@types';
 
 // Reusable TaskItem Component
-const TaskItem = ({ item, index }:{item:any,index:number}) => {
+const TaskItem = ({ item, index }:{item:TaskData,index:number}) => {
   return (
     <Pressable
       onPress={() => router.push({ pathname: "/tasksdetails", params: { task_id: item.task_id,title:item.title,due_date:item.due_date } })}
@@ -30,7 +31,7 @@ const TaskItem = ({ item, index }:{item:any,index:number}) => {
         <View style={styles?.subTaskContainer}>
           <View style={styles?.subTaskInfo}>
             <Octicons name="checklist" size={22} color={uiColors.dark_tint} />
-            <Text style={styles?.subTaskText}>0</Text>
+            <Text style={styles?.subTaskText}>{item?.subtasks?.filter((subtask:subtask)=>subtask.is_completed).length|| 0} / {item?.subtasks?.length || 0} </Text>
           </View>
         </View>
       </View>

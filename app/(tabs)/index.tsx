@@ -18,12 +18,12 @@ import { RefreshControl } from 'react-native';
 import { ActivityIndicator } from "react-native-paper";
 
 export default function HomeScreen() {
-  const [days, setDays] = useState([]);
+  const [days, setDays] = useState<any>([]);
   const [currentDay, setCurrentDay] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const { userData } = useUserContext();
-  const [tasks, setTasks] = useState([]);
+ const [tasks,setTasks]=useState([])
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -52,7 +52,7 @@ export default function HomeScreen() {
     }
   };
 
-  const { getData } = useUserContext();
+  const { getData} = useUserContext();
 
   const formatDay = (date) => {
     return {
@@ -61,7 +61,7 @@ export default function HomeScreen() {
     };
   };
 
-  const generateWeekDays = (currentDate) => {
+  const generateWeekDays = (currentDate:Date) => {
     const dayList = [];
     const dayOfWeek = currentDate.getDay();
     const sunday = new Date(currentDate);
@@ -96,10 +96,9 @@ export default function HomeScreen() {
     return () => clearInterval(intervalId);
   }, [currentDay]);
 
-  const handleDayPress = async (day) => {
+  const handleDayPress = async (day:any) => {
     if (selectedDay?.toDateString() !== day.date.toDateString()) {
       setSelectedDay(day.date);
-      console.log("Selected day:", day.date); // Debugging log
       await filterTasksByDate();
     }
   };
@@ -114,15 +113,17 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    getData();
-    filterTasksByDate();
-  }, []);
-
-  useEffect(() => {
-    if (selectedDay) {
-      filterTasksByDate();
-    }
+    const fetchAndFilterTasks = async () => {
+      await getData(); 
+  
+      if (selectedDay) {
+        filterTasksByDate();
+      }
+    };
+  
+    fetchAndFilterTasks();
   }, [selectedDay]);
+  
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -208,7 +209,7 @@ export default function HomeScreen() {
         ) : tasks.length > 0 ? (
           tasks.map((item, index) => <TaskItem key={index} item={item} index={index} />)
         ) : (
-          <Text style={styles.noTasksText}>No events found</Text>
+          <Text style={styles.noTasksText}>No tasks found</Text>
         )}
       </ScrollView>
     </SafeAreaView>

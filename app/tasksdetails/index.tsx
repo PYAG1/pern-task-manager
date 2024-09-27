@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { uiColors } from "@/constants/Colors";
 import { sizes } from "@/constants/fonts&sizes";
-import { ArrowLeft2, Calendar, Edit2, Task, Trash } from "iconsax-react-native";
+import { ArrowLeft2, Calendar, Check, Edit2, Task, Trash } from "iconsax-react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import { useUserContext } from "@/context/context";
@@ -23,15 +23,28 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { ActivityIndicator } from "react-native-paper";
 import { Entypo, Feather } from "@expo/vector-icons";
 import { formatDateAndTime } from "@/utils";
+import { Check as CheckIcon } from '@tamagui/lucide-icons'
+import { CheckboxProps, XStack,Checkbox, Label } from "tamagui";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const [task, setTask] = useState<any>();
+
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const { userData, loading, setLoading,getAllTasks } = useUserContext();
-  const { task_id, title } = useLocalSearchParams();
+  const {
+    userData,
+    loading,
+    setLoading,
+    getAllTasks,
+    getSingleTasks,
+    task,
+    setTask,
+    editTask,
+    subtasks,
+    setSubtasks,
+  } = useUserContext();
+  const { task_id, title,due_date  } = useLocalSearchParams();
   const [refreshing, setRefreshing] = useState(false);
-  const [subtasks, setSubtasks] = useState<subtask[]>([]);
+
   const refRBSheet = useRef<any>();
   const [subtask, setSubtask] = useState<subtask>({
     subtask_id: Math.ceil(Math.random() * 10000),
@@ -40,37 +53,9 @@ const Index = () => {
   });
 
   const [isVisible, setIsVisible] = useState(false);
-  const getSingleTasks = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_URL}/tasks/${task_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${userData?.token}`,
-          },
-        }
-      );
-      if (res.data?.status) {
-        setTask(res.data?.data);
-      }
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error.message ||
-        "An unexpected error occurred.";
-      Toast.show({
-        type: "error",
-        text1: errorMessage,
-      });
-      router.back();
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    getSingleTasks();
+    getSingleTasks(task_id as string);
   }, []);
 
   const toggleDescription = () => {
@@ -88,82 +73,76 @@ const Index = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await getSingleTasks();
+    await getSingleTasks(task_id as string);
     setRefreshing(false);
   };
-  console.log(subtask);
+  const handleAddSubtask = useCallback(() => {
+    if (subtask.title.trim() === "") return;
 
-  const handleAddSubtask = () => {
-    if (subtask.title.trim() !== "") {
-      setSubtasks((prevSubtasks) => [...prevSubtasks, subtask]);
-      Toast.show({
-        type: "success",
-        text1: "Subtask added successfully",
-      });
+    const newSubtask = {
+      subtask_id: Math.ceil(Math.random() * 10000),
+      title: subtask.title,
+      is_completed: false,
+    };
 
-      setSubtask({ subtask_id: 0, title: "", is_completed: false });
-    }
-  };
+    setSubtasks((prev) => [...prev, newSubtask]);
+    Toast.show({ type: "success", text1: "Subtask added successfully" });
+    setSubtask({
+      subtask_id: Math.ceil(Math.random() * 10000),
+      title: "",
+      is_completed: false,
+    });
+    closeBottomSheet();
+  }, [subtask]);
 
-  const handleDeleteSubtask = (subtask_id: number) => {
-    setSubtasks((prevSubtasks) =>
-      prevSubtasks.filter((subtask) => subtask.subtask_id !== subtask_id)
+  const handleDeleteSubtask = useCallback((subtask_id: number) => {
+    setSubtasks((prev) =>
+      prev.filter((subtask) => subtask.subtask_id !== subtask_id)
     );
-    Toast.show({
-      type: "success",
-      text1: "Subtask deleted successfully",
-    });
-  };
+    Toast.show({ type: "success", text1: "Subtask deleted successfully" });
+  }, []);
 
-  const handleToggleCompletion = (subtask_id: number) => {
-    setSubtasks((prevSubtasks) => {
-      const index = prevSubtasks.findIndex(
-        (subtask) => subtask.subtask_id === subtask_id
+  const handleToggleCompletion = useCallback((subtask_id: number) => {
+    setSubtasks((prev) =>
+      prev.map((subtask) =>
+        subtask.subtask_id === subtask_id
+          ? { ...subtask, is_completed: !subtask.is_completed }
+          : subtask
+      )
+    );
+  }, []);
+
+  const deleteTask = async () => {
+    try {
+      const res = await axios.delete(
+        `${process.env.EXPO_PUBLIC_API_URL}/tasks/${task_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${userData?.token}`,
+          },
+        }
       );
-      if (index === -1) return prevSubtasks;
-
-      const updatedSubtasks = [...prevSubtasks];
-      updatedSubtasks[index] = {
-        ...updatedSubtasks[index],
-        is_completed: !updatedSubtasks[index].is_completed,
-      };
-      return updatedSubtasks;
-    });
-  };
-
-const deleteTask = async () => {
-try {
-  const res = await axios.delete(
-    `${process.env.EXPO_PUBLIC_API_URL}/tasks/${task_id}`,
-    {
-      headers: {
-        Authorization: `Bearer ${userData?.token}`,
-      },
+      if (res?.data?.status) {
+        Toast.show({
+          type: "success",
+          text1: "Task deleted successfully",
+        });
+        router.back();
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error.message ||
+        "An unexpected error occurred.";
+      Toast.show({
+        type: "error",
+        text1: errorMessage,
+      });
+    } finally {
+      setLoading(false);
     }
-  )
-  if(res?.data?.status){
-    Toast.show({
-      type: "success",
-      text1: "Task deleted successfully",
-    });
- router.back();
-  }
-} catch (error:any) {
-  const errorMessage =
-  error?.response?.data?.message ||
-  error.message ||
-  "An unexpected error occurred.";
-Toast.show({
-  type: "error",
-  text1: errorMessage,
-});
-}
-finally{
-  setLoading(false);
-}
-
-}
-  const DeleleButtonAlert =  async () =>
+  };
+  const DeleleButtonAlert = async () =>
     Alert.alert("Delete Task", "Are you sure you want to delete this task?", [
       {
         text: "Cancel",
@@ -173,15 +152,12 @@ finally{
       {
         text: "OK",
         onPress: () => {
-     deleteTask();
-     
+          deleteTask();
         },
       },
     ]);
 
-    useEffect(()=>{
-getAllTasks();
-    },[deleteTask])
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -200,11 +176,21 @@ getAllTasks();
             paddingTop: sizes.marginSM * 3,
           }}
         >
-          <Pressable onPress={() => router.back()}>
+          <Pressable
+            onPress={async () => {
+              await editTask(
+                { ...task, subtasks: subtasks },
+                task_id as string
+              );
+              router.navigate("/(tabs)/");
+            }}
+          >
             <ArrowLeft2 size="28" color={uiColors.dark} />
           </Pressable>
           <View style={{ flexDirection: "row", gap: 30 }}>
-            <Pressable>
+            <Pressable
+              onPress={() => router.navigate(`/editTasks?taskId=${task_id}`)}
+            >
               <Edit2 size="24" color={uiColors.dark} />
             </Pressable>
             <Pressable onPress={DeleleButtonAlert}>
@@ -221,7 +207,7 @@ getAllTasks();
           <View>
             <Text style={styles.dateLabel}>Due Date</Text>
             <Text style={styles.dateValue}>
-              {!loading ? "not set" : "Not set"}
+              { formatDateAndTime(due_date, 'date')}
             </Text>
           </View>
         </View>
@@ -344,7 +330,7 @@ getAllTasks();
                           marginBottom: sizes.marginSM * 2,
                         }}
                       >
-                        {subtasks.map((item) => (
+                        {subtasks?.map((item) => (
                           <SubtaskItem
                             key={item.subtask_id}
                             item={item}
@@ -476,7 +462,7 @@ getAllTasks();
                     borderRadius: 10,
                     color: uiColors.white,
                   }}
-                  maxLength={20}
+                  maxLength={50}
                 />
                 <Pressable
                   onPress={() => {
@@ -547,28 +533,13 @@ const SubtaskItem = React.memo(
           alignItems: "center",
         }}
       >
-        <Pressable
-          onPress={() => onToggle(item.subtask_id)}
-          style={{ position: "absolute", left: 5, padding: 10 }}
-        >
-          {item.is_completed ? (
-            <Feather name="check-circle" size={24} color="black" />
-          ) : (
-            <Entypo name="circle" size={24} color="black" />
-          )}
-        </Pressable>
-
-        <Text
-          style={{
-            flex: 1,
-            textAlign: "center",
-            color: uiColors.dark,
-            fontSize: sizes.fontSize[3],
-            fontWeight: "600",
-          }}
-        >
-          {item.title}
-        </Text>
+  
+        <CheckboxWithLabel
+          size="$4" 
+          label={item.title}
+          checked={item.is_completed}
+          onCheckedChange={() => onToggle(item.subtask_id)}
+        />
 
         <Pressable
           onPress={() => onDelete(item.subtask_id)}
@@ -580,6 +551,41 @@ const SubtaskItem = React.memo(
     );
   }
 );
+
+
+
+export function CheckboxWithLabel({
+  size,
+  label,
+  checked,
+  onCheckedChange,
+  ...checkboxProps
+}: CheckboxProps & { label?: string; checked: boolean; onCheckedChange: (checked: boolean) => void }) {
+  const id = `checkbox-${(size || '').toString().slice(1)}`;
+  
+  return (
+    <XStack width={300} alignItems="center" gap="$4">
+      <Checkbox
+        id={id}
+        size={size}
+        checked={checked} 
+        onCheckedChange={onCheckedChange} 
+        {...checkboxProps}
+      >
+        <Checkbox.Indicator>
+        <CheckIcon color={uiColors.white}  />
+        </Checkbox.Indicator>
+      </Checkbox>
+
+      {label && (
+        <Label size={size} htmlFor={id} style={{color:uiColors.dark,fontWeight:"bold"}}>
+          {label}
+        </Label>
+      )}
+    </XStack>
+  );
+}
+
 
 const styles = StyleSheet.create({
   container: {

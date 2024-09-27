@@ -1,91 +1,44 @@
+import { subtask } from "@/@types";
 import DatePickerComponent from "@/components/core-ui/datepicker";
 import TextAreaComponent from "@/components/core-ui/textArea";
 import TextInputComponent from "@/components/core-ui/textinput";
 import { uiColors } from "@/constants/Colors";
 import { sizes } from "@/constants/fonts&sizes";
 import { useUserContext } from "@/context/context";
-import { formatDateAndTime } from "@/utils";
+import { formatDateAndTime, timeToTimestamp } from "@/utils";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import axios from "axios";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Formik } from "formik";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
   ScrollView,
+  StatusBar,
   Text,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function Index() {
   const priorities = ["Low", "Medium", "High"];
-  const [selectedPriority, setSelectedPriority] = useState("Low");
+
   const { userData, loading, setLoading } = useUserContext();
+  const { tasks, setTasks, task, getSingleTasks,editTask } = useUserContext();
+  const { taskId } = useLocalSearchParams();
+  const [selectedPriority, setSelectedPriority] = useState(
+    task?.priority || "Low"
+  );
 
-  interface TaskData {
-    title: string;
-    due_date: string;
-    description?: string;
-    time?: string;
-    priority?: string;
-  }
+  useEffect(() => {
+    getSingleTasks(taskId as string);
+ 
+  }, []);
 
-  const createTask = async (data: TaskData) => {
-    if (!userData?.token) {
-      Toast.show({
-        type: "error",
-        text1: "User is not authenticated. Please log in.",
-      });
-      return;
-    }
 
-    setLoading(true);
 
-    try {
-      const { data: responseData } = await axios.post(
-        `${process.env.EXPO_PUBLIC_API_URL}/tasks`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${userData?.token}`,
-          },
-        }
-      );
-
-      if (responseData?.status) {
-        Toast.show({
-          type: "success",
-          text1: "Task Created Successfully!",
-        });
-        router.navigate("/(tabs)/");
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "Failed to Create Task",
-          text2: responseData?.data?.message || "Unknown error",
-        });
-      }
-    } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error.message ||
-        "An unexpected error occurred.";
-      const errorStatus = error?.response?.status;
-
-      console.error(`Error (${errorStatus}):`, errorMessage);
-
-      Toast.show({
-        type: "error",
-        text1: "Error Creating Task",
-        text2: errorMessage,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <SafeAreaView
@@ -96,6 +49,7 @@ export default function Index() {
         paddingVertical: sizes.marginSM * 1.5,
       }}
     >
+      <StatusBar barStyle="light-content" />
       <View
         style={{
           width: "100%",
@@ -116,27 +70,30 @@ export default function Index() {
           fontWeight: "400",
         }}
       >
-        New Task 🎯
+        "Edit Task 🎯"
       </Text>
 
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+      >
         <Formik
+          enableReinitialize
           initialValues={{
-            title: "",
-            description: "",
-            due_date: "",
-            time: "",
-            priority: selectedPriority,
+            title: task?.title,
+            description: task?.description || "",
+            due_date: task?.due_date || "",
+            time: timeToTimestamp(task?.time) || "",
+            priority: task?.priority || selectedPriority,
           }}
           onSubmit={async (values, { resetForm }) => {
-            console.log(values);
             const requestData = {
               ...values,
               due_date: formatDateAndTime(values.due_date, "date"),
               time: formatDateAndTime(values.time, "time"),
+              priority: selectedPriority,
             };
-        
-            await createTask(requestData);
+            await editTask(requestData,taskId as string);
           }}
         >
           {({
@@ -146,7 +103,6 @@ export default function Index() {
             errors,
             values,
             touched,
-            setFieldValue,
             isValid,
             dirty,
           }) => (
@@ -265,7 +221,7 @@ export default function Index() {
                       color: uiColors.dark_light,
                     }}
                   >
-                    Create
+                    {taskId ? "Update Task" : "Create Task"}
                   </Text>
                 )}
               </Pressable>

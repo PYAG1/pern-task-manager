@@ -48,7 +48,8 @@ export default function Index() {
         "An unexpected error occurred.";
       Toast.show({
         type: "error",
-        text1: errorMessage,
+        text1: "Error Signing In",
+        text2:errorMessage
       });
     } finally {
       setLoading(false);
