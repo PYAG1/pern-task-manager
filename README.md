@@ -3,9 +3,8 @@ A task management application using PERN stack
 Status: Not Complete
 
 
-
-#### URL [Live Demo ](https://youtube.com/shorts/P_OwB9EqIGY?feature=share)
-
+####  ![Live Demo](https://github.com/PYAG1/pern-task-manager/blob/master/assets/images/scancode.png)
+#### URL [Video Demo ](https://youtube.com/shorts/P_OwB9EqIGY?feature=share)
 #### Backend [here](https://github.com/PYAG1/pern-task-manager-backend)
 
 
