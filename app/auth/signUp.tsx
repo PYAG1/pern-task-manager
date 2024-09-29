@@ -58,7 +58,7 @@ export default function Index() {
 
   return (
     <SafeAreaView
-      style={{
+      style={{  
         flex: 1,
         backgroundColor: uiColors.dark,
         width: sizes.screenWidth,

@@ -25,6 +25,7 @@ import { Entypo, Feather } from "@expo/vector-icons";
 import { formatDateAndTime } from "@/utils";
 import { Check as CheckIcon } from '@tamagui/lucide-icons'
 import { CheckboxProps, XStack,Checkbox, Label } from "tamagui";
+import { BarChart, LineChart } from "react-native-gifted-charts";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -44,7 +45,7 @@ const Index = () => {
   } = useUserContext();
   const { task_id, title,due_date  } = useLocalSearchParams();
   const [refreshing, setRefreshing] = useState(false);
-
+  const data = [{value: 15}, {value: 30}, {value: 26}, {value: 40}];
   const refRBSheet = useRef<any>();
   const [subtask, setSubtask] = useState<subtask>({
     subtask_id: Math.ceil(Math.random() * 10000),
@@ -111,7 +112,15 @@ const Index = () => {
       )
     );
   }, []);
-
+  const barData = [
+    {value: 250, label: 'M'},
+    {value: 500, label: 'T', frontColor: '#177AD5'},
+    {value: 745, label: 'W', frontColor: '#177AD5'},
+    {value: 320, label: 'T'},
+    {value: 600, label: 'F', frontColor: '#177AD5'},
+    {value: 256, label: 'S'},
+    {value: 300, label: 'S'},
+];
   const deleteTask = async () => {
     try {
       const res = await axios.delete(
@@ -255,6 +264,8 @@ const Index = () => {
               style={[
                 styles.tabText,
                 activeTab === "activity" && styles.activeTabText,
+          
+                
               ]}
             >
               Activity
@@ -279,6 +290,7 @@ const Index = () => {
             </View>
           ) : (
             <>
+            {/*Overview Content*/ }
               {activeTab === "overview" ? (
                 <ScrollView
                   showsVerticalScrollIndicator={false}
@@ -365,7 +377,23 @@ const Index = () => {
                   </View>
                 </ScrollView>
               ) : (
-                <Text style={styles.contentText}>Activity Content</Text>
+                <View>
+                  <Text style={styles.contentText}>Activity Content</Text>
+                  <BarChart
+                barWidth={22}
+                noOfSections={3}
+                barBorderRadius={4}
+                frontColor="lightgray"
+             color={"White"}
+            barStyle={{color:uiColors.dark}}
+                data={barData}
+              
+              xAxisLabelTextStyle={{color:"white"}}
+              yAxisTextStyle={{color:"white"}}
+              yAxisColor={"white"}
+
+            />
+                </View>
               )}
             </>
           )}
@@ -635,6 +663,7 @@ const styles = StyleSheet.create({
     fontSize: sizes.fontSize[2],
     textAlign: "justify",
     lineHeight: 20,
+    marginBottom: sizes.marginSM,
   },
   dateContainer: {
     flexDirection: "row",

@@ -1,7 +1,7 @@
 import { uiColors } from "@/constants/Colors";
 import { sizes } from "@/constants/fonts&sizes";
-import React from "react";
-import { View, Text, Image, Pressable } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, Image, Pressable, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import user from "../../assets/images/user.png";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -9,14 +9,33 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { ArrowRight } from "iconsax-react-native";
 import { router } from "expo-router";
 import { useUserContext } from "@/context/context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Profile() {
-  const stats = [
-    { title: "Total", stat: 20 },
-    { title: "Completed", stat: 15 },
-    { title: "Pending", stat: 5 },
-  ];
-const {userData}=useUserContext()
+
+const {userData,setLoading,stats,getStats}=useUserContext()
+useEffect(()=>{
+  getStats()
+},[])
+
+const LogoutButtonAlert = async () =>
+  Alert.alert("Logout", "Are you sure you want to logout?", [
+    {
+      text: "Cancel",
+      onPress: () => console.log(""),
+      style: "cancel",
+    },
+    {
+      text: "OK",
+      onPress: () => {
+   AsyncStorage.removeItem("userData")
+   router.replace("/auth/signIn")
+      },
+    },
+  ]);
+
+
+
   const navigationOptions = [
     {
       title: "Details",
@@ -35,13 +54,15 @@ const {userData}=useUserContext()
     {
       title: "Change Password",
       icon: <MaterialIcons name="password" size={28} color={uiColors.dark_light} />,
-      action: () => {},
+      action: () => {
+        router.push("/changePassword")
+      },
     },
     {
       title: "Logout",
       icon: <MaterialIcons name="logout" size={28} color={uiColors.dark_light} />,
       action: () => {
-        
+        LogoutButtonAlert()
       },
     },
   ];
@@ -121,9 +142,9 @@ const {userData}=useUserContext()
           paddingHorizontal:sizes.marginSM
         }}
       >
-        {stats.map((item) => (
+        {stats?.map((item,index) => (
           <View
-            key={item.title}
+            key={index}
             style={{ justifyContent: "center", alignItems: "center", gap: 10 }}
           >
             <Text
@@ -149,7 +170,7 @@ const {userData}=useUserContext()
             gap: 10,
             borderRadius: 15,
             borderWidth: 1,
-            borderColor: uiColors.light_blue, // Only the surrounding border remains
+            borderColor: uiColors.light_blue, 
           }}
         >
           {navigationOptions.map((item, index) => (
@@ -163,6 +184,7 @@ const {userData}=useUserContext()
                   paddingLeft: 15,
                   paddingRight: 15,
                 }}
+                onPress={item.action}
               >
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <View

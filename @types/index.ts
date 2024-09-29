@@ -19,12 +19,13 @@ export interface subtask{
 
 export interface TaskData {
     task_id?: string;
-    title: string;
-    due_date: string;
-    description: string;
-    time: string;
-    priority: string;
+    title?: string;  
+    due_date?: string;
+    description?: string;
+    time?: any;
+    priority?: string;
     status?: string;
     subtasks?: subtask[];
-    created_at?:any
+    created_at?: any;
   }
+  

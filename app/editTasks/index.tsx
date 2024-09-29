@@ -80,7 +80,7 @@ export default function Index() {
         <Formik
           enableReinitialize
           initialValues={{
-            title: task?.title,
+            title: task?.title || "",
             description: task?.description || "",
             due_date: task?.due_date || "",
             time: timeToTimestamp(task?.time) || "",

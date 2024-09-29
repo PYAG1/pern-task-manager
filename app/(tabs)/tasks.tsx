@@ -4,20 +4,21 @@ import { uiColors } from '@/constants/Colors';
 import { sizes } from '@/constants/fonts&sizes';
 import { TaskSquare } from 'iconsax-react-native';
 import { useUserContext } from '@/context/context';
-import TaskItem from "@/components/core-ui/taskItem"
+import TaskItem from "@/components/core-ui/taskItem";
 
 export default function Tasks() {
-  const [activeFilter, setActiveFilter] = useState('completed');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { getAllTasks, tasks } = useUserContext();
 
   const filters = [
-    { label: 'Completed', value: 'completed', count: 5 },
-    { label: 'Pending', value: 'pending', count: 8 },
-    { label: 'High', value: 'high', count: 3 },
-    { label: 'Low', value: 'low', count: 7 },
-    { label: 'Medium', value: 'medium', count: 2 },
+    { label: 'All', value: 'all', count: tasks.length },
+    { label: 'Completed', value: 'completed', count: tasks.filter(task => task.status === 'Completed').length },
+    { label: 'Pending', value: 'pending', count: tasks.filter(task => task.status === 'Pending').length },
+    { label: 'High', value: 'high', count: tasks.filter(task => task.priority === 'High').length },
+    { label: 'Low', value: 'low', count: tasks.filter(task => task.priority === 'Low').length },
+    { label: 'Medium', value: 'medium', count: tasks.filter(task => task.priority === 'Medium').length },
   ];
 
   useEffect(() => {
@@ -35,6 +36,18 @@ export default function Tasks() {
     await getAllTasks();
     setRefreshing(false);
   };
+
+  const filteredTasks = tasks.filter((task) => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'completed') return task.status === 'Completed';
+    if (activeFilter === 'pending') return task.status === 'Pending';
+    if (activeFilter === 'high') return task.priority === 'High';
+    if (activeFilter === 'low') return task.priority === 'Low';
+    if (activeFilter === 'medium') return task.priority === 'Medium';
+    return true;
+  });
+
+  const noTasksMessage = `No ${activeFilter} tasks`;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -81,11 +94,15 @@ export default function Tasks() {
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={uiColors.white} />
         </View>
+      ) : filteredTasks.length === 0 ? ( 
+        <View style={styles.noTasksContainer}>
+          <Text style={styles.noTasksText}>{noTasksMessage}</Text>
+        </View>
       ) : (
         <FlatList
-          data={tasks}
+          data={filteredTasks}
           renderItem={({ item, index }) => <TaskItem item={item} index={index} />}
-          keyExtractor={(item) => item?.task_id.toString()}
+          keyExtractor={(item) => item?.task_id?.toString() || ''}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 100 }}
           refreshControl={
@@ -170,5 +187,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  noTasksContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noTasksText: {
+    color: uiColors.white,
+    fontSize: sizes.fontSize[3],
   },
 });

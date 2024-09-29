@@ -16,16 +16,19 @@ interface UserContextType {
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   userData: userData | null;
   setUserData: React.Dispatch<React.SetStateAction<userData | null>>;
-  tasks: any[];
-  setTasks: (tasks: any[]) => void;
+  tasks: TaskData[];
+  setTasks: React.Dispatch<React.SetStateAction<TaskData[]>>;
   subtasks: subtask[];
   setSubtasks: React.Dispatch<React.SetStateAction<subtask[]>>;
   getAllTasks: () => Promise<void>;
   getData: () => Promise<void>;
   getSingleTasks: (task_id: string | number) => Promise<void>;
-  task: any;
-  setTask: React.Dispatch<any>;
+  task: TaskData | null;
+  setTask: React.Dispatch<React.SetStateAction<TaskData | null>>;
   editTask: (data: TaskData, taskId: string) => Promise<void>;
+  setStats: React.Dispatch<React.SetStateAction<any[]>>;
+  stats: any[];
+  getStats: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -44,9 +47,10 @@ interface UserContextProviderProps {
 export const UserContextProvider = ({ children }: UserContextProviderProps) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [userData, setUserData] = useState<userData | null>(null);
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<TaskData[]>([]);
   const [subtasks, setSubtasks] = useState<subtask[]>([]);
-  const [task, setTask] = useState<any>();
+  const [task, setTask] = useState<TaskData| null>(null);
+  const [stats, setStats] = useState<any[]>([]);
   const getData = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem("userData");
@@ -68,7 +72,7 @@ export const UserContextProvider = ({ children }: UserContextProviderProps) => {
       });
       if (res.data?.status) {
         setTasks(res.data?.data);
-       // setSubtasks(res.data?.data?.subtasks);
+        // setSubtasks(res.data?.data?.subtasks);
       }
     } catch (error: any) {
       const errorMessage =
@@ -122,11 +126,14 @@ export const UserContextProvider = ({ children }: UserContextProviderProps) => {
     }
 
     setLoading(true);
-if(data?.subtasks){
-  if(data?.subtasks?.filter((subtask:subtask)=>subtask.is_completed).length === data?.subtasks?.length){ 
-    data.status = "Completed"
-  }
-}
+    if (data?.subtasks) {
+      if (
+        data?.subtasks?.filter((subtask: subtask) => subtask.is_completed)
+          .length === data?.subtasks?.length
+      ) {
+        data.status = "Completed";
+      }
+    }
     try {
       const { data: responseData } = await axios.put(
         `${process.env.EXPO_PUBLIC_API_URL}/tasks/${taskId}`,
@@ -170,9 +177,53 @@ if(data?.subtasks){
       getAllTasks();
     }
   };
-useEffect(()=>{
-  getData()
-},[])
+  const getStats = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_URL}/getStats`,
+        {
+          headers: {
+            Authorization: `Bearer ${userData?.token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        const data = response.data;
+
+        setStats([
+          { title: "Total", stat: data.totalTasks || 0 },
+          { title: "Completed", stat: data.completedTasks || 0 },
+          { title: "Pending", stat: data.totalTasks - data.completedTasks || 0 },
+        ]);
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Failed to fetch stats",
+          text2: "Unknown error occurred.",
+        });
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error.message ||
+        "An unexpected error occurred.";
+
+      Toast.show({
+        type: "error",
+        text1: "Error fetching stats",
+        text2: errorMessage,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getData();
+    getStats();
+  }, []);
   return (
     <UserContext.Provider
       value={{
@@ -190,6 +241,9 @@ useEffect(()=>{
         task,
         setTask,
         editTask,
+        stats,
+        setStats,
+        getStats,
       }}
     >
       {children}
